@@ -1,0 +1,2 @@
+smolagents>=1.10.0
+openai>=1.0.0
