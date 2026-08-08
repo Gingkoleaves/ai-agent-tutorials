@@ -17,7 +17,7 @@ import operator
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END
 
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+llm = ChatOpenAI(model="deepseek-chat", temperature=0, base_url="https://api.deepseek.com")
 
 
 # ============================================================

@@ -19,7 +19,7 @@ from crewai import Agent, Task, Crew, Process
 from langchain_openai import ChatOpenAI
 
 # 创建 LLM 实例
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.3)
+llm = ChatOpenAI(model="deepseek-chat", temperature=0.3, base_url="https://api.deepseek.com")
 
 
 # ============================================================

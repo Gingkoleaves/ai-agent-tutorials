@@ -102,7 +102,7 @@ def demo_code_agent():
 
     # LiteLLMModel：通用 LLM 适配层
     # model_id 格式：provider/model，如 "openai/gpt-4o-mini"
-    model = LiteLLMModel(model_id="openai/gpt-4o-mini", temperature=0)
+    model = LiteLLMModel(model_id="openai/deepseek-chat", temperature=0, api_base="https://api.deepseek.com")
 
     agent = CodeAgent(
         tools=[get_word_count, format_as_markdown, summarize_list],
@@ -136,7 +136,7 @@ def demo_tool_calling_agent():
     print("特点：Agent 输出 JSON 格式的工具调用指令（传统方式）")
     print()
 
-    model = LiteLLMModel(model_id="openai/gpt-4o-mini", temperature=0)
+    model = LiteLLMModel(model_id="openai/deepseek-chat", temperature=0, api_base="https://api.deepseek.com")
 
     agent = ToolCallingAgent(
         tools=[get_word_count, format_as_markdown],

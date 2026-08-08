@@ -94,7 +94,7 @@ def create_agent(use_memory: bool = False):
 
     agent = Agent(
         # 模型配置
-        model=OpenAIChat(id="gpt-4o-mini"),
+        model=OpenAIChat(id="deepseek-chat", base_url="https://api.deepseek.com"),
 
         # 工具列表
         tools=[get_current_time, calculate, search_knowledge],

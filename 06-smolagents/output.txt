@@ -1,0 +1,181 @@
+🦤 Smolagents 入门演示
+Smolagents 是 HuggingFace 出品的轻量级 Agent 框架
+最大特点：CodeAgent 直接执行 Python 代码作为 Action
+
+
+🤖 CodeAgent 演示
+==================================================
+特点：Agent 输出 Python 代码作为 Action，在沙箱中执行
+
+╭────────────────────────────────── New run ───────────────────────────────────╮
+│                                                                              │
+│ 请完成以下任务：                                                             │
+│ 1. 统计字符串 "人工智能正在改变世界，每一个开发者都应该了解 AI Agent         │
+│ 的基本原理" 的字符数                                                         │
+│ 2. 创建一个包含 8 个 AI                                                      │
+│ 框架名称的列表：LangChain、LangGraph、CrewAI、AutoGen、Agno、Smolagents、Lla │
+│ maIndex、Haystack                                                            │
+│ 3. 用 summarize_list 工具展示这个列表（最多显示5项）                         │
+│ 4. 把结果格式化成一个 Markdown 章节，标题是"AI Agent 框架一览"               │
+│ 5. 输出最终的 Markdown 文本                                                  │
+│                                                                              │
+╰─ OpenAIModel - deepseek-chat ────────────────────────────────────────────────╯
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ Step 1 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Output message of the LLM: ─────────────────────────────────────────────────────
+我来逐步完成这个任务。让我先统计字符数、创建列表、展示列表，最后格式化为Markdown
+。
+
+**步骤1：统计字符数**
+
+首先统计字符串的字符数。
+
+<code>
+text = "人工智能正在改变世界，每一个开发者都应该了解 AI Agent 的基本原理"
+word_count = get_word_count(text)
+print(f"字符数: {word_count}")
+
+ ─ Executing parsed code: ─────────────────────────────────────────────────────
+  text = "人工智能正在改变世界，每一个开发者都应该了解 AI Agent 的基本原理"
+  word_count = get_word_count(text)
+  print(f"字符数: {word_count}")
+ ──────────────────────────────────────────────────────────────────────────────
+Execution logs:
+字符数: 34
+
+Out: None
+[Step 1: Duration 1.42 seconds| Input tokens: 2,304 | Output tokens: 81]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ Step 2 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Output message of the LLM: ─────────────────────────────────────────────────────
+字符数是34。接下来创建包含8个AI框架名称的列表，并用`summarize_list`展示。
+
+**步骤2：创建列表并用summarize_list展示**
+
+<code>
+frameworks = ["LangChain", "LangGraph", "CrewAI", "AutoGen", "Agno",
+"Smolagents", "LlamaIndex", "Haystack"]
+summary = summarize_list(frameworks, max_items=5)
+print(summary)
+
+ ─ Executing parsed code: ─────────────────────────────────────────────────────
+  frameworks = ["LangChain", "LangGraph", "CrewAI", "AutoGen", "Agno",
+  "Smolagents", "LlamaIndex", "Haystack"]
+  summary = summarize_list(frameworks, max_items=5)
+  print(summary)
+ ──────────────────────────────────────────────────────────────────────────────
+Execution logs:
+- LangChain
+- LangGraph
+- CrewAI
+- AutoGen
+- Agno
+...以及另外 3 项
+
+Out: None
+[Step 2: Duration 1.31 seconds| Input tokens: 4,787 | Output tokens: 179]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ Step 3 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Output message of the LLM: ─────────────────────────────────────────────────────
+列表已展示。现在用`format_as_markdown`创建Markdown章节，将字符数和框架列表都包含
+进去。
+
+**步骤3：格式化为Markdown章节并输出**
+
+<code>
+content = f"""字符串 "人工智能正在改变世界，每一个开发者都应该了解 AI Agent
+的基本原理" 包含 **{word_count}** 个字符。
+
+以下是一些常用的 AI Agent 框架：
+
+{summary}
+"""
+markdown = format_as_markdown(title="AI Agent 框架一览", content=content,
+level=2)
+final_answer(markdown)
+
+ ─ Executing parsed code: ─────────────────────────────────────────────────────
+  content = f"""字符串 "人工智能正在改变世界，每一个开发者都应该了解 AI Agent
+  的基本原理" 包含 **{word_count}** 个字符。
+
+  以下是一些常用的 AI Agent 框架：
+
+  {summary}
+  """
+  markdown = format_as_markdown(title="AI Agent 框架一览", content=content,
+  level=2)
+  final_answer(markdown)
+ ──────────────────────────────────────────────────────────────────────────────
+Final answer: ## AI Agent 框架一览
+
+字符串 "人工智能正在改变世界，每一个开发者都应该了解 AI Agent 的基本原理" 包含
+**34** 个字符。
+
+以下是一些常用的 AI Agent 框架：
+
+- LangChain
+- LangGraph
+- CrewAI
+- AutoGen
+- Agno
+...以及另外 3 项
+
+
+[Step 3: Duration 1.74 seconds| Input tokens: 7,506 | Output tokens: 299]
+
+📄 最终结果：
+## AI Agent 框架一览
+
+字符串 "人工智能正在改变世界，每一个开发者都应该了解 AI Agent 的基本原理" 包含 **34** 个字符。
+
+以下是一些常用的 AI Agent 框架：
+
+- LangChain
+- LangGraph
+- CrewAI
+- AutoGen
+- Agno
+...以及另外 3 项
+
+
+
+
+🔧 ToolCallingAgent 演示
+==================================================
+特点：Agent 输出 JSON 格式的工具调用指令（传统方式）
+
+╭────────────────────────────────── New run ───────────────────────────────────╮
+│                                                                              │
+│ 统计'Smolagents是HuggingFace开发的轻量级Agent框架'的字符数，并将结果格式化为 │
+│ Markdown（标题：统计结果）                                                   │
+│                                                                              │
+╰─ OpenAIModel - deepseek-chat ────────────────────────────────────────────────╯
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ Step 1 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+╭──────────────────────────────────────────────────────────────────────────────╮
+│ Calling tool: 'get_word_count' with arguments: {'text':                      │
+│ 'Smolagents是HuggingFace开发的轻量级Agent框架'}                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+Observations: 35
+[Step 1: Duration 0.87 seconds| Input tokens: 1,469 | Output tokens: 50]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ Step 2 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+╭──────────────────────────────────────────────────────────────────────────────╮
+│ Calling tool: 'format_as_markdown' with arguments: {'title': '统计结果',     │
+│ 'content': '35', 'level': 2}                                                 │
+╰──────────────────────────────────────────────────────────────────────────────╯
+Observations: ## 统计结果
+
+35
+[Step 2: Duration 0.74 seconds| Input tokens: 3,018 | Output tokens: 122]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ Step 3 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+╭──────────────────────────────────────────────────────────────────────────────╮
+│ Calling tool: 'final_answer' with arguments: {'answer': '## 统计结果\n\n35'} │
+╰──────────────────────────────────────────────────────────────────────────────╯
+Observations: ## 统计结果
+
+35
+Final answer: ## 统计结果
+
+35
+[Step 3: Duration 1.12 seconds| Input tokens: 4,650 | Output tokens: 163]
+
+📄 结果：
+## 统计结果
+
+35

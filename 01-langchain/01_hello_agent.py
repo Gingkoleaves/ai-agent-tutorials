@@ -55,7 +55,7 @@ def calculate(expression: str) -> str:
 # ChatOpenAI：连接 OpenAI 的对话模型
 # model：用哪个模型，gpt-4o-mini 速度快且便宜
 # temperature：创造力，0 表示"严格按事实说"，1 表示"天马行空"
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+llm = ChatOpenAI(model="deepseek-chat", temperature=0, base_url="https://api.deepseek.com")
 
 
 # ============================================================

@@ -17,8 +17,9 @@ from autogen import AssistantAgent, UserProxyAgent, GroupChat, GroupChatManager
 
 # AutoGen 使用 LLM 配置字典
 llm_config = {
-    "model": "gpt-4o-mini",
+    "model": "deepseek-chat",
     "api_key": os.environ.get("OPENAI_API_KEY"),   # 从环境变量读取 API Key
+    "base_url": "https://api.deepseek.com",
     "temperature": 0,
 }
 
