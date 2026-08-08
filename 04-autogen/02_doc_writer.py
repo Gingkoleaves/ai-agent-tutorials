@@ -16,11 +16,10 @@ import os
 from autogen import AssistantAgent, UserProxyAgent, GroupChat, GroupChatManager
 
 # AutoGen 使用 LLM 配置字典
-# DeepSeek 兼容 OpenAI API，只需指定 base_url
 llm_config = {
     "model": "deepseek-chat",
-    "api_key": os.environ.get("OPENAI_API_KEY"),
-    "base_url": "https://api.deepseek.com/v1",   # DeepSeek OpenAI 兼容端点
+    "api_key": os.environ.get("OPENAI_API_KEY"),   # 从环境变量读取 API Key
+    "base_url": "https://api.deepseek.com",
     "temperature": 0,
 }
 
@@ -56,13 +55,31 @@ reviewer = AssistantAgent(
     llm_config=llm_config,
 )
 
+# 文档撰写员 Agent：负责生成文档
+document_writer = AssistantAgent(
+    name="文档撰写员",
+    system_message="""你是一位技术文档撰写专家。
+当代码审查通过后，你需要：
+1. 阅读最终版本的代码
+2. 生成一个完整的 README 文档，包括：
+   - 项目概述（一句话说明功能和用途）
+   - 函数签名和参数说明（表格形式）
+   - 行为说明（列举核心逻辑要点）
+   - 输出示例（仿真实输出格式）
+   - 使用示例（Python 代码片段）
+   - 注意事项（列出3-5条）
+   - 依赖说明
+输出格式为 Markdown，完成后说"✅ TERMINATE"。""",
+    llm_config=llm_config,
+)
+
 # UserProxyAgent：模拟用户，负责启动对话
 # human_input_mode="NEVER"：不需要真人输入，全自动运行
 # code_execution_config：是否允许执行代码（这里关闭，只做对话演示）
 user_proxy = UserProxyAgent(
     name="用户",
     human_input_mode="NEVER",
-    max_consecutive_auto_reply=3,   # 允许自动转发多轮消息
+    max_consecutive_auto_reply=0,   # 用户不自动回复
     code_execution_config=False,    # 不执行代码（安全起见）
     default_auto_reply="",
 )
@@ -73,30 +90,20 @@ user_proxy = UserProxyAgent(
 # ============================================================
 
 def two_agent_chat(task: str):
-    """程序员 → 审查员 接力审查"""
+    """程序员和审查员的双人对话"""
     print(f"\n{'='*60}")
     print(f"📋 任务：{task}")
     print('='*60)
 
-    # 第一步：让程序员写代码
+    # initiate_chat：启动对话
+    # recipient：对话对象
+    # message：第一条消息（任务描述）
+    # max_turns：最多对话几轮
     user_proxy.initiate_chat(
         recipient=programmer,
-        message=f"请完成以下编程任务（只写代码，不要审查）：\n\n{task}",
-        max_turns=1,  # 程序员回复一次就够了
+        message=f"请完成以下编程任务：\n\n{task}",
+        max_turns=4,    # 最多4轮对话（程序员写→审查员审→程序员改→审查员确认）
     )
-
-    # 第二步：把程序员的代码发给审查员
-    # 从 chat_history 中提取程序员最后一条消息
-    code_msg = programmer.last_message()
-    if code_msg:
-        print(f"\n{'─'*55}")
-        print("🔍 审查员开始审查...")
-        print('─'*55)
-        user_proxy.initiate_chat(
-            recipient=reviewer,
-            message=f"请审查以下代码：\n\n{code_msg['content']}",
-            max_turns=2,  # 审查员提意见 → 程序员回应？
-        )
 
 
 # ============================================================
@@ -111,7 +118,7 @@ def group_chat_demo(task: str):
 
     # 创建群组聊天
     group_chat = GroupChat(
-        agents=[programmer, reviewer, user_proxy],
+        agents=[programmer, reviewer, document_writer, user_proxy],
         messages=[],          # 消息历史（初始为空）
         max_round=6,          # 最多6轮
         # speaker_selection_method：谁来发言的策略
@@ -127,7 +134,7 @@ def group_chat_demo(task: str):
 
     user_proxy.initiate_chat(
         recipient=manager,
-        message=f"团队任务：{task}\n请程序员先写代码，然后审查员审核。",
+        message=f"团队任务：{task}\n请程序员先写代码，然后审查员审核。审查通过后，由文档撰写员生成 README。",
         max_turns=1,
     )
 
@@ -135,14 +142,8 @@ def group_chat_demo(task: str):
 if __name__ == "__main__":
     print("🤖 AutoGen 多智能体协作演示\n")
 
-    # 演示1：两个 Agent 接力（程序员 → 审查员）
-    two_agent_chat(
-        "写一个 Python 函数，计算斐波那契数列的前 N 项，"
-        "要求：有类型注释、有文档字符串、处理 N<=0 的边界情况"
-    )
-
-    # 演示2：群组讨论（程序员 + 审查员 + 用户）
+    # 进阶演示：三Agent群组对话（程序员→审查员→文档撰写员）
     group_chat_demo(
-        "写一个 Python 函数，判断一个字符串是否是回文（palindrome），"
-        "要求：忽略大小写和空格，有类型注释和文档字符串"
+        "写一个 Python 函数，比较不同复杂度排序算法的性能，并输出结果。"
+        "要求：有类型注释、有文档字符串、处理 N<=0 的边界情况"
     )

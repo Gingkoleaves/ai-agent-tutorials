@@ -30,6 +30,7 @@ pip install -r requirements.txt
 ```
 
 Python 版本要求：**3.10+**
+> 本仓库实际运行环境：**Python 3.14.6**，Conda 环境 `AutoGen`
 
 ## 快速开始
 
@@ -39,3 +40,17 @@ cd ai-agent-tutorials/01-langchain
 pip install -r requirements.txt
 python 01_hello_agent.py
 ```
+
+## LangChain 1.3+ API 适配说明
+
+本仓库代码已针对 `langchain==1.3.14` 作出修改，原始教程使用的旧版 API 已被废弃。主要变更：
+
+| 旧 API | 新 API（LangChain 1.3+） |
+|--------|--------------------------|
+| `create_tool_calling_agent(llm, tools, prompt)` | `create_agent(model=llm, tools=tools, system_prompt="...")` |
+| `AgentExecutor(agent=agent, tools=tools)` | 不再需要，`create_agent` 返回的 graph 可直接调用 |
+| `ChatPromptTemplate.from_messages([...])` | 直接传 `system_prompt` 字符串 |
+| `MessagesPlaceholder` | 不再需要，在 `messages` 列表中直接传递历史消息 |
+| `result["output"]` | `result["messages"][-1].content` |
+
+涉及文件：`01-langchain/01_hello_agent.py`、`01-langchain/02_memory_agent.py`

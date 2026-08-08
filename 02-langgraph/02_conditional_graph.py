@@ -73,8 +73,8 @@ def accept_node(state: ReviewState) -> dict:
 # ============================================================
 
 def route_after_review(state: ReviewState) -> Literal["revise", "accept"]:
-    """审核后的路由：通过→接受，不通过且次数<3→修改，超过3次→强制接受"""
-    if state["verdict"] == "通过" or state["attempts"] >= 3:
+    """审核后的路由：通过→接受，不通过且次数<5→修改，超过5次→强制接受"""
+    if state["verdict"] == "通过" or state["attempts"] >= 5:
         return "accept"
     return "revise"
 

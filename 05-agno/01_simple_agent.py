@@ -19,7 +19,7 @@
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
 from agno.tools import tool
-from agno.storage.sqlite import SqliteStorage
+from agno.db.sqlite import SqliteDb
 import datetime
 
 
@@ -83,18 +83,27 @@ def search_knowledge(query: str) -> str:
 def create_agent(use_memory: bool = False):
     """创建 Agno Agent"""
 
-    storage = None
+    db = None
     if use_memory:
-        # SqliteStorage：用 SQLite 数据库存储对话历史（轻量级本地存储）
-        # session_id：会话 ID，同一个 ID 的对话会被关联在一起
-        storage = SqliteStorage(
-            table_name="agent_sessions",
+        # agno 2.8+ 使用 SqliteDb 替代旧的 SqliteStorage
+        db = SqliteDb(
             db_file="agent_memory.db",
+            session_table="agent_sessions",
         )
 
     agent = Agent(
         # 模型配置
-        model=OpenAIChat(id="deepseek-chat", base_url="https://api.deepseek.com"),
+        # 注意：DeepSeek 不支持 developer 角色，必须显式设置 role_map
+        model=OpenAIChat(
+            id="deepseek-chat",
+            base_url="https://api.deepseek.com",
+            role_map={
+                "system": "system",
+                "user": "user",
+                "assistant": "assistant",
+                "tool": "tool",
+            },
+        ),
 
         # 工具列表
         tools=[get_current_time, calculate, search_knowledge],
@@ -108,13 +117,12 @@ def create_agent(use_memory: bool = False):
             "用中文回答，语言简洁友好",
         ],
 
-        # 记忆配置
-        storage=storage,
-        add_history_to_messages=use_memory,   # 是否将历史消息加入上下文
-        num_history_responses=5,               # 记住最近5条对话
+        # 记忆配置（agno 2.8+ 改名）
+        db=db,
+        add_history_to_context=use_memory,   # 原名 add_history_to_messages
+        num_history_runs=5,                  # 原名 num_history_responses
 
         # 显示工具调用过程
-        show_tool_calls=True,
         markdown=True,
     )
 
@@ -132,7 +140,6 @@ def demo_basic():
 
     agent = create_agent(use_memory=False)
 
-    # agent.print_response()：调用 Agent 并打印格式化输出
     questions = [
         "现在几点了？",
         "帮我计算 (100 + 50) * 2 / 3",
@@ -151,7 +158,6 @@ def demo_memory():
 
     agent = create_agent(use_memory=True)
 
-    # 多轮对话
     conversations = [
         "我叫小明，我在学习 AI Agent 框架",
         "我刚才说我叫什么名字？",   # 测试记忆

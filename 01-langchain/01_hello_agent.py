@@ -11,8 +11,7 @@
 
 from langchain_openai import ChatOpenAI          # OpenAI 的对话模型
 from langchain_core.tools import tool            # 把函数变成 Agent 工具的装饰器
-from langchain.agents import create_tool_calling_agent, AgentExecutor
-from langchain_core.prompts import ChatPromptTemplate
+from langchain.agents import create_agent        # LangChain 1.3+ 新版 API
 
 # ============================================================
 # 第一部分：定义工具（Tools）
@@ -59,54 +58,46 @@ llm = ChatOpenAI(model="deepseek-chat", temperature=0, base_url="https://api.dee
 
 
 # ============================================================
-# 第三部分：定义提示词模板（Prompt Template）
-# Agent 需要一个"系统设定"告诉它该怎么工作
+# 第三部分：系统提示词
+# LangChain 1.3+ 直接传字符串，不需要 ChatPromptTemplate
 # ============================================================
-
-# ChatPromptTemplate.from_messages：用消息列表定义对话结构
-# ("system", "...") 是系统提示，告诉 AI 它的角色
-# ("human", "{input}") 是用户输入，{input} 是占位符，会被实际内容替换
-# ("placeholder", "{agent_scratchpad}") 是 Agent 的"草稿纸"，记录思考过程
-prompt = ChatPromptTemplate.from_messages([
-    ("system", "你是一个智能助手，可以查询天气和进行数学计算。用中文回答。"),
-    ("human", "{input}"),
-    ("placeholder", "{agent_scratchpad}"),
-])
+system_prompt = "你是一个智能助手，可以查询天气和进行数学计算。用中文回答。"
 
 
 # ============================================================
-# 第四部分：创建 Agent 和 AgentExecutor
-# Agent = LLM + 工具列表 + 提示词模板（决策大脑）
-# AgentExecutor = 运行 Agent 并执行工具的执行器（行动身体）
+# 第四部分：创建 Agent
+# create_agent：LangChain 1.3+ 新版 API
+# 传入 model + tools + system_prompt，返回一个可直接调用的 Agent（CompiledStateGraph）
+# 不需要 AgentExecutor 了，Agent 本身就是可执行的
 # ============================================================
 
 tools = [get_weather, calculate]   # 列表：把工具放在方括号里
 
-# create_tool_calling_agent：创建一个支持工具调用的 Agent
-agent = create_tool_calling_agent(llm, tools, prompt)
-
-# AgentExecutor：让 Agent 真正跑起来
-# verbose=True：打印详细的思考过程，方便学习理解
-agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+# create_agent：创建一个能调用工具的 Agent
+agent = create_agent(model=llm, tools=tools, system_prompt=system_prompt)
 
 
 # ============================================================
 # 第五部分：运行 Agent
 # ============================================================
 
-def ask(question: str):
-    """提问并打印结果"""
-    print(f"\n{'='*50}")
-    print(f"🙋 问题：{question}")
-    print('='*50)
-    result = agent_executor.invoke({"input": question})
-    print(f"\n✅ 最终回答：{result['output']}")
-
-
 # if __name__ == "__main__"：
 # 只有直接运行这个文件时才执行，import 时不会执行
 # 这是 Python 的惯例写法
 if __name__ == "__main__":
+    from langchain_core.messages import HumanMessage
+
+    def ask(question: str):
+        """提问并打印结果"""
+        print(f"\n{'='*50}")
+        print(f"🙋 问题：{question}")
+        print('='*50)
+        # 新 API：传入 messages 列表，最后一条 AI 消息即为回答
+        result = agent.invoke({"messages": [HumanMessage(content=question)]})
+        # result["messages"] 是整个对话的消息列表，最后一条是 AI 的回答
+        final_msg = result["messages"][-1]
+        print(f"\n✅ 最终回答：{final_msg.content}")
+
     ask("北京今天天气怎么样？")
     ask("上海和广州，哪个城市温度更高？")
     ask("如果我有 100 块钱，每天花 3.5 块，能花多少天？")

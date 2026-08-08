@@ -5,8 +5,7 @@
 
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
-from langchain.agents import create_tool_calling_agent, AgentExecutor
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain.agents import create_agent        # LangChain 1.3+ 新版 API
 from langchain_core.messages import HumanMessage, AIMessage
 
 llm = ChatOpenAI(model="deepseek-chat", temperature=0, base_url="https://api.deepseek.com")
@@ -25,40 +24,41 @@ def get_weather(city: str) -> str:
 
 tools = [get_weather]
 
-# MessagesPlaceholder：给历史消息留一个占位符
-# variable_name="chat_history"：占位符的名字
-prompt = ChatPromptTemplate.from_messages([
-    ("system", "你是一个有记忆的天气助手，记住用户说过的信息。用中文回答。"),
-    MessagesPlaceholder(variable_name="chat_history"),   # 历史消息放这里
-    ("human", "{input}"),
-    MessagesPlaceholder(variable_name="agent_scratchpad"),
-])
-
-agent = create_tool_calling_agent(llm, tools, prompt)
-agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=False)
+# ============================================================
+# 新 API：create_agent 直接传入 system_prompt 字符串
+# 不需要 ChatPromptTemplate 和 MessagesPlaceholder
+# ============================================================
+agent = create_agent(
+    model=llm,
+    tools=tools,
+    system_prompt="你是一个有记忆的天气助手，记住用户说过的信息。用中文回答。",
+)
 
 # ============================================================
-# 手动维护对话历史
-# 列表（list）：用方括号 [] 表示，可以动态添加元素
+# 手动维护对话历史（多轮对话的关键）
 # ============================================================
-chat_history = []   # 空列表，存放对话历史
+chat_history = []   # 空列表，存放所有消息
 
 
 def chat(user_input: str):
-    """多轮对话函数"""
+    """多轮对话函数 —— 每次把完整历史 + 新问题一起传给 Agent"""
+    global chat_history
+
     print(f"\n🙋 你：{user_input}")
 
-    result = agent_executor.invoke({
-        "input": user_input,
-        "chat_history": chat_history,  # 传入历史记录
+    # 新 API：messages 是完整对话历史 + 当前用户消息
+    result = agent.invoke({
+        "messages": chat_history + [HumanMessage(content=user_input)],
     })
 
-    answer = result["output"]
+    # result["messages"] 包含所有消息，最后一条是 AI 的回答
+    all_messages = result["messages"]
+    answer = all_messages[-1].content
     print(f"🤖 AI：{answer}")
 
-    # .append()：向列表末尾添加元素
-    chat_history.append(HumanMessage(content=user_input))  # 存用户消息
-    chat_history.append(AIMessage(content=answer))          # 存 AI 回复
+    # 把本轮对话追加到历史里，供下一轮使用
+    chat_history.append(HumanMessage(content=user_input))
+    chat_history.append(AIMessage(content=answer))
 
     return answer
 

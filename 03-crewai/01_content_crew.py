@@ -15,11 +15,14 @@
 # 我们只需要传入参数来"实例化"它们
 # -------------------------------------
 
-from crewai import Agent, Task, Crew, Process
-from langchain_openai import ChatOpenAI
+from crewai import Agent, Task, Crew, Process, LLM
 
-# 创建 LLM 实例
-llm = ChatOpenAI(model="deepseek-chat", temperature=0.3, base_url="https://api.deepseek.com")
+# CrewAI 1.15+ 使用内置 LLM 类（不再直接用 langchain_openai）
+llm = LLM(
+    model="openai/deepseek-chat",
+    base_url="https://api.deepseek.com",
+    temperature=0.3,
+)
 
 
 # ============================================================
